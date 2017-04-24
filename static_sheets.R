@@ -62,6 +62,45 @@ yds_routes <- yds_routes %>% mutate(simple_grade = renameGrade(grade))
 ggplot(yds_routes, aes(x=reorder(simple_grade, -`times climbed`, sum), y=`times climbed`)) + geom_bar(stat = "summary", fun.y=sum) + xlab("Grade") + ylab("Count") + ggtitle("Rock Routes by Grade")
 
 # Viz 2: Boulder Routes by Grade
+boulders <- ws %>% filter(tolower(type) == 'boulder')
+
+# Remove +/- from other climbs
+renameBoulderGrade <- function(raw_grades) {
+  renameOneBoulderGrade <- function(raw_grade) {
+    # Find the VB grades graded as routes (5.1 - 5.9+)
+    pattern <- "5\\.([0-9]{1,2})[+-]?"
+    m <- str_match(raw_grade, pattern)
+    grade <- m[2]
+    # Grade is on YDS scale
+    if (! is.na(grade)) {
+      return("VB")
+    } 
+    else if (raw_grade == "V-easy") {
+      return("VB")
+    }
+    else {
+      # Matches hueco grades
+      vPattern <- "V([0-9]{1,2})[+-]?[0-9]?"
+      m <- str_match(raw_grade, vPattern)
+      
+      grade <- m[2]
+      if (! is.na(grade)) {
+        # Rounds grades such that V1-2 returns V1, V2+ return V2, V3- returns V3.
+        return(paste("V", grade, sep=""))
+      }
+      
+      return(raw_grade)
+    }
+  }
+  
+  sapply(raw_grades, renameOneBoulderGrade, USE.NAMES = FALSE)
+}
+
+boulders <- boulders %>% mutate(simple_grade = renameBoulderGrade(grade))
+boulders$simple_grade <- factor(boulders$simple_grade, levels <- c("VB", "V0", "V1", "V2", "V3", "V4", "V5"))
+total_boulders <- sum(boulders$`times climbed`)
+# TODO: Separate by repeat/first time
+ggplot(boulders, aes(x = simple_grade, y=`times climbed`)) + geom_bar(stat = "summary", fun.y=sum) + xlab("Grade") + ylab("Times Climbed") + ggtitle(paste("Boulders by Grade (", total_boulders, " total)", sep=""))
 
 # Viz 3: Pitches by Month
 
