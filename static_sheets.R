@@ -6,6 +6,9 @@ library("stringr")
 sheet <- gs_title("Commonplace")
 ws <- sheet %>% gs_read(ws = "Outdoor Climbs")
 
+# Convert date to date object
+ws$date <- as.Date(ws$date, "%m/%d/%Y")
+
 # Visualization 1: Rock Routes by Grade
 isRoute <- function(x) {
   # Should be a 'type' of the route
@@ -15,9 +18,6 @@ isRoute <- function(x) {
 
 # Filter only routes and remove NAs
 routes <- ws %>% filter(isRoute(type))
-
-# Convert date to date object
-routes$date <- as.Date(routes$date, "%m/%d/%Y")
 
 # YDS grades only for now
 yds_routes <- routes %>% filter(grepl("5\\.[0-9].*", grade))
@@ -103,5 +103,10 @@ total_boulders <- sum(boulders$`times climbed`)
 ggplot(boulders, aes(x = simple_grade, y=`times climbed`)) + geom_bar(stat = "summary", fun.y=sum) + xlab("Grade") + ylab("Times Climbed") + ggtitle(paste("Boulders by Grade (", total_boulders, " total)", sep=""))
 
 # Viz 3: Pitches by Month
+ws <- ws %>% mutate(month_year = format(date, "%m/%y"), year = format(date, "%Y"))
+# Reorder by date but plot by month/date so it sorts correctly
+# Add fill = type to get a breakdown of style: boulder/trad/sport
+ggplot(ws, aes(x=reorder(month_year, date), y=`times climbed`)) + geom_bar(stat = "summary", fun.y=sum) + xlab("Month") + ylab("Pitches") + ggtitle("Pitches per Month")
 
 # Viz 4: Pitches by Year
+ggplot(ws, aes(x=reorder(year, date), y=`times climbed`)) + geom_bar(stat = "summary", fun.y=sum) + xlab("Year") + ylab("Pitches") + ggtitle("Pitches per Year")
