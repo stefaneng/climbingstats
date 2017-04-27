@@ -106,6 +106,7 @@ ggplot(boulders, aes(x = simple_grade, y=`times climbed`)) + geom_bar(stat = "su
 ws <- ws %>% mutate(month_year = format(date, "%m/%y"), year = format(date, "%Y"))
 # Reorder by date but plot by month/date so it sorts correctly
 # Add fill = type to get a breakdown of style: boulder/trad/sport
+# Possible to skip a labels: http://stackoverflow.com/questions/5407367/remove-a-few-text-marks-from-tick-marks-in-ggplot-bar-plot
 ggplot(ws, aes(x=reorder(month_year, date), y=`times climbed`)) + geom_bar(stat = "summary", fun.y=sum) + xlab("Month") + ylab("Pitches") + ggtitle("Pitches per Month")
 
 # Viz 4: Pitches by Year
