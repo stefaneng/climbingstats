@@ -3,6 +3,7 @@ library(googlesheets)
 library(dplyr)
 library(ggplot2)
 library(stringr)
+library(plotly)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
@@ -65,7 +66,7 @@ shinyServer(function(input, output) {
   yds_routes <- yds_routes %>% mutate(simple_grade = renameGrade(grade))
   
   
-  output$routesPlot <- renderPlot({
+  output$routesPlot <- renderPlotly({
     # Sort by descending # of times climbed. Should really sort by grade order
     ggplot(yds_routes, aes(x=reorder(simple_grade, -`times climbed`, sum), y=`times climbed`)) + 
       geom_bar(stat = "summary", fun.y=sum) + 
@@ -113,21 +114,21 @@ shinyServer(function(input, output) {
   boulders$simple_grade <- factor(boulders$simple_grade, levels <- c("VB", "V0", "V1", "V2", "V3", "V4", "V5"))
   total_boulders <- sum(boulders$`times climbed`)
   
-  output$bouldersPlot <- renderPlot({
+  output$bouldersPlot <- renderPlotly({
     ggplot(boulders, aes(x = simple_grade, y=`times climbed`)) + 
       geom_bar(stat = "summary", fun.y=sum) + 
       xlab("Grade") + ylab("Times Climbed") + 
       ggtitle(paste("Boulders by Grade (", total_boulders, " total)", sep=""))
   })
   
-  output$pitchesMonthYearPlot <- renderPlot({
+  output$pitchesMonthYearPlot <- renderPlotly({
     # Reorder by date but plot by month/date so it sorts correctly
     # Add fill = type to get a breakdown of style: boulder/trad/sport
     # Possible to skip a labels: http://stackoverflow.com/questions/5407367/remove-a-few-text-marks-from-tick-marks-in-ggplot-bar-plot
     ggplot(ws, aes(x=reorder(month_year, date), y=`times climbed`)) + geom_bar(stat = "summary", fun.y=sum) + xlab("Month") + ylab("Pitches") + ggtitle("Pitches per Month")
   })
   
-  output$pitchesYearPlot <- renderPlot({
+  output$pitchesYearPlot <- renderPlotly({
     # Viz 4: Pitches by Year
     ggplot(ws, aes(x=reorder(year, date), y=`times climbed`)) + geom_bar(stat = "summary", fun.y=sum) + xlab("Year") + ylab("Pitches") + ggtitle("Pitches per Year")
   })

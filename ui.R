@@ -1,4 +1,5 @@
 library(shiny)
+library(plotly)
 
 shinyUI(fluidPage(
   
@@ -7,10 +8,10 @@ shinyUI(fluidPage(
 
     # Show Routes per Grade
     mainPanel(
-       plotOutput("routesPlot"),
-       plotOutput("bouldersPlot"),
-       plotOutput("pitchesMonthYearPlot"),
-       plotOutput("pitchesYearPlot")
+       plotlyOutput("routesPlot"),
+       plotlyOutput("bouldersPlot"),
+       plotlyOutput("pitchesMonthYearPlot"),
+       plotlyOutput("pitchesYearPlot")
     )
   )
 )
