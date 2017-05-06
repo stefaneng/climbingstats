@@ -11,7 +11,8 @@ shinyUI(fluidPage(
        plotlyOutput("routesPlot"),
        plotlyOutput("bouldersPlot"),
        plotlyOutput("pitchesMonthYearPlot"),
-       plotlyOutput("pitchesYearPlot")
+       plotlyOutput("pitchesYearPlot"),
+       fluidRow(column(4, tableOutput('firstBoulderGradeTable')))
     )
   )
 )
