@@ -3,7 +3,7 @@ library(dplyr)
 library(ggplot2)
 library(stringr)
 
-sheet <- gs_title("Commonplace")
+sheet <- gs_title("Climbing / Workout")
 ws <- sheet %>% gs_read(ws = "Outdoor Climbs")
 
 # Convert date to date object
@@ -106,7 +106,7 @@ renameBoulderGrade <- function(raw_grades) {
 }
 
 boulders <- boulders %>% mutate(simple_grade = renameBoulderGrade(grade))
-boulders$simple_grade <- factor(boulders$simple_grade, levels <- c("VB", "V0", "V1", "V2", "V3", "V4", "V5"))
+boulders$simple_grade <- factor(boulders$simple_grade, levels <- c("VB", "V0", "V1", "V2", "V3", "V4", "V5", "V6"))
 total_boulders <- sum(boulders$`times climbed`)
 
 ggBouldersPlot <- ggplot(boulders, aes(x = simple_grade, y=`times climbed`)) + 

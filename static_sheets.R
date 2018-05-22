@@ -3,7 +3,7 @@ library("dplyr")
 library("ggplot2")
 library("stringr")
 
-sheet <- gs_title("Commonplace")
+sheet <- gs_title("Climbing / Workout")
 ws <- sheet %>% gs_read(ws = "Outdoor Climbs")
 
 # Convert date to date object
