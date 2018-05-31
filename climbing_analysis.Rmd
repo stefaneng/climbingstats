@@ -1,0 +1,116 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+## Load Data
+First load the data from Google Sheets.
+```{r}
+library(googlesheets)
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(forcats)
+library(readr)
+library(lubridate)
+
+sheet <- gs_title("Climbing / Workout")
+climbDf <- sheet %>% gs_read(ws = "Outdoor Climbs")
+```
+
+## Set up the correct data types
+```{r}
+# Convert date to date object
+climbDf$date <- mdy(climbDf$date)
+climbDf$type <- parse_factor(climbDf$type, c("boulder", "sport", "trad", "toprope", "follow"))
+# Remove the extra styles
+climbDf %<>% filter(style %in% c("Onsight", "Flash", "Redpoint", "Repeat"))
+climbDf$style <- parse_factor(climbDf$style, c("Onsight", "Flash", "Redpoint", "Repeat"))
+```
+## Takes the YDS and converts into MountainProject bins
+
+```{r}
+renameYdsGrade <- function(raw_grades) {
+  renameOneGrade <- function(raw_grade) {
+    pattern <- "5\\.([0-9]{1,2})([abcd]?)([-+]?)"
+    # Grade/letter
+    m <- str_match(raw_grade, pattern)
+    
+    grade <- as.integer(m[2])
+    letter <- m[3]
+    sym <- m[4]
+    if (! is.na(grade)) {
+      if (grade <= 6) {
+        return("<=5.6")
+      } else if (grade < 10) {
+        # Don't care about +/- if grade is less than 5.10..
+        sym <- ""
+      } else if (! is.na(letter)) {
+        if (letter == "a") {
+          sym <- "-"
+        } else if (letter == "b" || letter == "c") {
+          sym <- ""
+        } else if (letter == "d") {
+          sym <- "+"
+        }
+      }
+      
+      return(paste("5.", grade, sym, sep=""))
+    }
+  }
+  
+  sapply(raw_grades, renameOneGrade, USE.NAMES = FALSE)
+}
+```
+
+## Normalize boulder grades
+
+```{r}
+# Remove +/- from other climbs
+renameBoulderGrade <- function(raw_grades) {
+  renameOneBoulderGrade <- function(raw_grade) {
+    # Find the VB grades graded as routes (5.1 - 5.9+)
+    pattern <- "5\\.([0-9]{1,2})[+-]?"
+    m <- str_match(raw_grade, pattern)
+    grade <- m[2]
+    # Grade is on YDS scale
+    if (! is.na(grade)) {
+      return("VB")
+    } 
+    else if (raw_grade == "V-easy") {
+      return("VB")
+    }
+    else {
+      # Matches hueco grades
+      vPattern <- "V([0-9]{1,2})[+-]?[0-9]?"
+      m <- str_match(raw_grade, vPattern)
+      
+      grade <- m[2]
+      if (! is.na(grade)) {
+        # Rounds grades such that V1-2 returns V1, V2+ return V2, V3- returns V3.
+        return(paste("V", grade, sep=""))
+      }
+      
+      return(raw_grade)
+    }
+  }
+  
+  sapply(raw_grades, renameOneBoulderGrade, USE.NAMES = FALSE)
+}
+```
+
+```{r}
+gradeCount <- climbDf %>%
+  filter(type == "boulder", str_detect(style, regex("redpoint|flash|onsight", ignore_case = TRUE))) %>%
+  mutate(simple_grade = renameBoulderGrade(grade)) %>%
+  select(date, simple_grade) %>%
+  filter(str_detect(simple_grade, "V[1-6]")) %>%
+  group_by(simple_grade) %>%
+  mutate(n = row_number(date))
+
+ggplot(gradeCount, aes(x = date, fill = simple_grade)) + geom_area(stat = "bin", bins=12)
+ggplot(gradeCount, aes(x = date, y = n, color = simple_grade)) + geom_step()
+
+# ggplot(gradeCount, aes(x = date, y = n, fill = simple_grade)) + geom_area()
+```
